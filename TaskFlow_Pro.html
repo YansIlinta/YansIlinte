@@ -1,0 +1,752 @@
+以下是您要求的“更高端、更有趣”的TaskFlow增强版HTML代码。它保留了原版的核心打卡功能，并新增了分类管理、数据图表、成就系统、主题切换等交互模块，界面更加精致，交互反馈更丰富，且移除了所有音效相关代码。
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TaskFlow | 智能任务时光机</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-gradient: linear-gradient(145deg, #0a0c1a 0%, #10152e 100%);
+            --card-bg: rgba(15, 25, 45, 0.65);
+            --border-glow: rgba(100, 108, 255, 0.3);
+            --primary: #5c6bc0;
+            --primary-light: #7986cb;
+            --secondary: #ffb74d;
+            --success: #66bb6a;
+            --danger: #ef5350;
+            --text: #f0f3fa;
+            --text-muted: #9aa5c1;
+            --shadow: 0 20px 35px -12px rgba(0,0,0,0.4);
+            --glow: 0 0 12px rgba(92,107,192,0.4);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 10% 30%, #0b1120, #030617);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* 动态粒子背景 (无声音) */
+        .particle-field {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            background: rgba(100, 108, 255, 0.2);
+            border-radius: 50%;
+            backdrop-filter: blur(2px);
+            animation: floatParticle linear infinite;
+        }
+        @keyframes floatParticle {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 毛玻璃卡片增强 */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 32px;
+            box-shadow: var(--shadow);
+            transition: all 0.25s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(100,108,255,0.4);
+            box-shadow: var(--glow);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 28px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a5b4fc, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .logo-icon {
+            background: linear-gradient(145deg, #5c6bc0, #7e57ff);
+            border-radius: 20px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 14px rgba(92,107,192,0.3);
+        }
+
+        .btn-icon {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 40px;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover {
+            background: rgba(92,107,192,0.4);
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 24px;
+            margin-bottom: 36px;
+        }
+        .stat-card {
+            padding: 24px 20px;
+            text-align: center;
+            transition: all 0.25s;
+        }
+        .stat-value {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(145deg, #fff, #b9c8ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* 双栏布局 */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.6fr;
+            gap: 28px;
+            margin-bottom: 32px;
+        }
+        @media (max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-input, .form-select, .form-textarea {
+            background: rgba(10, 20, 35, 0.7);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 14px 18px;
+            color: white;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .form-input:focus, .form-select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(92,107,192,0.2);
+        }
+
+        /* 优先级选择器 */
+        .priority-selector {
+            display: flex;
+            gap: 12px;
+        }
+        .priority-option {
+            flex: 1;
+            padding: 10px;
+            border-radius: 40px;
+            text-align: center;
+            background: rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .priority-option.selected {
+            background: rgba(92,107,192,0.5);
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 6px var(--primary);
+        }
+
+        .btn-submit {
+            background: linear-gradient(95deg, #5c6bc0, #8b5cf6);
+            border: none;
+            border-radius: 44px;
+            padding: 14px;
+            font-weight: 600;
+            width: 100%;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-submit:hover {
+            transform: scale(1.01);
+            box-shadow: 0 8px 20px rgba(92,107,192,0.4);
+        }
+
+        /* 任务列表 */
+        .task-list {
+            max-height: 580px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+        .task-item {
+            background: rgba(25, 35, 55, 0.6);
+            border-radius: 28px;
+            padding: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.2s;
+            border-left: 4px solid var(--primary);
+        }
+        .task-item.completed {
+            opacity: 0.65;
+            filter: grayscale(0.1);
+            border-left-color: var(--success);
+        }
+        .task-checkbox {
+            width: 28px;
+            height: 28px;
+            border-radius: 30px;
+            border: 2px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .task-item.completed .task-checkbox {
+            background: var(--success);
+            border-color: var(--success);
+        }
+        .task-info {
+            flex: 1;
+        }
+        .task-name {
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+        .task-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+            font-size: 0.75rem;
+        }
+        .badge {
+            background: rgba(92,107,192,0.2);
+            padding: 4px 12px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 图表容器 */
+        .stats-chart {
+            margin: 28px 0 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 28px;
+            padding: 20px;
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+            background: transparent;
+            border-radius: 20px;
+        }
+
+        /* 成就徽章 */
+        .achievement-grid {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 20px 0 10px;
+        }
+        .achievement-badge {
+            background: rgba(255,215,0,0.15);
+            border-radius: 60px;
+            padding: 8px 18px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+
+        .theme-switch {
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            border-radius: 40px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 轻提示 */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            padding: 12px 24px;
+            color: white;
+            z-index: 999;
+            transition: 0.2s;
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="particle-field" id="particleField"></div>
+<div class="container">
+    <header class="glass-card">
+        <div class="logo">
+            <div class="logo-icon">✨</div>
+            <span>TaskFlow 星轨</span>
+        </div>
+        <div style="display: flex; gap: 14px;">
+            <div class="theme-switch" id="themeToggle">🌙 深空模式</div>
+            <button class="btn-icon" id="exportBtn" title="导出备份">📤</button>
+            <button class="btn-icon" id="importBtn" title="导入备份">📥</button>
+        </div>
+    </header>
+
+    <div class="stats-grid">
+        <div class="stat-card glass-card"><div class="stat-value" id="totalTasks">0</div><div>今日任务</div></div>
+        <div class="stat-card glass-card"><div class="stat-value" id="completedTasks">0</div><div>已完成打卡</div></div>
+        <div class="stat-card glass-card"><div class="stat-value" id="completionRate">0%</div><div>完成率</div></div>
+        <div class="stat-card glass-card"><div class="stat-value" id="streakDays">0</div><div>连续打卡🔥</div></div>
+    </div>
+
+    <div class="main-grid">
+        <!-- 左侧：新建任务 + 图表/成就 -->
+        <div>
+            <div class="glass-card" style="padding: 28px; margin-bottom: 28px;">
+                <h3 style="margin-bottom: 24px;">⚡ 新任务舱</h3>
+                <form id="taskForm">
+                    <div class="form-group"><input type="text" class="form-input" id="taskName" placeholder="任务名称 · 晨间冥想" required></div>
+                    <div class="form-group"><textarea class="form-textarea" id="taskDesc" placeholder="备注 · 提升专注力"></textarea></div>
+                    <div class="form-group time-inputs" style="display: flex; gap: 12px;">
+                        <input type="time" class="form-input" id="taskTime" required>
+                        <select class="form-select" id="repeatType"><option value="daily">每日重复</option><option value="weekdays">工作日</option><option value="weekends">周末</option><option value="once">仅一次</option></select>
+                    </div>
+                    <div class="form-group"><label>标签分类</label><select class="form-select" id="taskCategory"><option value="🌱 成长">🌱 成长</option><option value="💪 健康">💪 健康</option><option value="📖 学习">📖 学习</option><option value="💼 工作">💼 工作</option><option value="🎨 创意">🎨 创意</option></select></div>
+                    <div class="form-group"><label>优先级</label><div class="priority-selector"><div class="priority-option low" data-val="low">🟢 低</div><div class="priority-option selected" data-val="normal">🟠 中</div><div class="priority-option high" data-val="high">🔴 高</div></div><input type="hidden" id="priority" value="normal"></div>
+                    <button type="submit" class="btn-submit">✈️ 发射任务</button>
+                </form>
+            </div>
+
+            <!-- 成就系统 + 简单数据图 -->
+            <div class="glass-card" style="padding: 28px;">
+                <h3>🏆 成就殿堂</h3>
+                <div id="achievementList" class="achievement-grid"></div>
+                <div class="stats-chart">
+                    <canvas id="weeklyChart" width="400" height="180" style="width:100%; height:auto; max-height:180px"></canvas>
+                </div>
+                <div style="font-size: 0.75rem; text-align: center; margin-top: 8px;">📅 本周完成趋势</div>
+            </div>
+        </div>
+
+        <!-- 右侧任务列表 + 日历 -->
+        <div class="glass-card" style="padding: 28px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                <h3>📋 今日星轨任务</h3>
+                <div><button class="btn-icon" id="sortByPriority" style="width: auto; padding: 6px 14px;">按优先级排序</button></div>
+            </div>
+            <div id="taskList" class="task-list"></div>
+            <hr style="margin: 24px 0; border-color: rgba(255,255,255,0.1);">
+            <div class="calendar-header" style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <h4>📆 打卡日历</h4>
+                <div><button class="btn-icon" id="prevMonthBtn">◀</button><span id="currentMonthYear" style="margin:0 12px"></span><button class="btn-icon" id="nextMonthBtn">▶</button></div>
+            </div>
+            <div class="calendar-grid" id="calendar" style="display: grid; grid-template-columns: repeat(7,1fr); gap: 8px;"></div>
+        </div>
+    </div>
+</div>
+<div id="toastMsg" class="toast" style="transform: translateY(100px); opacity:0;"></div>
+
+<script>
+    // ---------- 数据存储 ----------
+    let tasks = JSON.parse(localStorage.getItem('taskflow_v2_tasks')) || [];
+    let completedMap = JSON.parse(localStorage.getItem('taskflow_v2_completed')) || {};   // "taskId-dateStr": true
+    let currentMonth = new Date();
+    let currentTheme = 'dark'; // 暗色为主，轻量切换
+    let sortPriorityActive = false;
+
+    // DOM 元素
+    const taskListEl = document.getElementById('taskList');
+    const totalSpan = document.getElementById('totalTasks');
+    const completedSpan = document.getElementById('completedTasks');
+    const rateSpan = document.getElementById('completionRate');
+    const streakSpan = document.getElementById('streakDays');
+    const calendarGrid = document.getElementById('calendar');
+    const monthYearSpan = document.getElementById('currentMonthYear');
+
+    // 辅助函数
+    function todayDateStr() { return new Date().toDateString(); }
+    function formatDateKey(taskId, date = new Date()) { return `${taskId}_${date.toDateString()}`; }
+    function isTaskCompletedToday(taskId) { return !!completedMap[formatDateKey(taskId)]; }
+    function saveAll() { localStorage.setItem('taskflow_v2_tasks', JSON.stringify(tasks)); localStorage.setItem('taskflow_v2_completed', JSON.stringify(completedMap)); updateStats(); renderTasks(); renderCalendar(); updateChartAndAchievements(); }
+
+    // 更新统计数据 & 连续打卡
+    function updateStats() {
+        const today = new Date();
+        const todayTasks = tasks.filter(t => {
+            if (t.repeat === 'once') return new Date(t.created).toDateString() === today.toDateString();
+            if (t.repeat === 'weekdays') return today.getDay() !== 0 && today.getDay() !== 6;
+            if (t.repeat === 'weekends') return today.getDay() === 0 || today.getDay() === 6;
+            return true;
+        });
+        const completedCount = todayTasks.filter(t => isTaskCompletedToday(t.id)).length;
+        const total = todayTasks.length;
+        const rate = total ? Math.round(completedCount / total * 100) : 0;
+        totalSpan.innerText = total;
+        completedSpan.innerText = completedCount;
+        rateSpan.innerText = rate + '%';
+
+        // 计算连续打卡（基于全局任何任务打卡，简单模拟：只要今天至少完成一个任务就算一天）
+        let streak = 0;
+        let cursor = new Date();
+        while (true) {
+            let dateStr = cursor.toDateString();
+            let hasAny = tasks.some(t => completedMap[`${t.id}_${dateStr}`]);
+            if (hasAny) streak++;
+            else break;
+            cursor.setDate(cursor.getDate() - 1);
+        }
+        streakSpan.innerText = streak;
+    }
+
+    // 渲染任务列表 (支持分类展示与排序)
+    function renderTasks() {
+        const today = new Date();
+        let todayTasks = tasks.filter(t => {
+            if (t.repeat === 'once') return new Date(t.created).toDateString() === today.toDateString();
+            if (t.repeat === 'weekdays') return today.getDay() !== 0 && today.getDay() !== 6;
+            if (t.repeat === 'weekends') return today.getDay() === 0 || today.getDay() === 6;
+            return true;
+        }).map(t => ({ ...t, completed: isTaskCompletedToday(t.id) }));
+
+        if (sortPriorityActive) {
+            const order = { high: 1, normal: 2, low: 3 };
+            todayTasks.sort((a,b) => (order[a.priority]||2) - (order[b.priority]||2));
+        } else {
+            todayTasks.sort((a,b) => a.time.localeCompare(b.time));
+        }
+
+        if (todayTasks.length === 0) {
+            taskListEl.innerHTML = `<div class="empty-state" style="padding:40px;text-align:center">✨ 暂无今日任务，添加一项吧 ✨</div>`;
+            return;
+        }
+        taskListEl.innerHTML = todayTasks.map(task => `
+            <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+                <div class="task-checkbox" onclick="toggleTask(${task.id})">${task.completed ? '✓' : ''}</div>
+                <div class="task-info">
+                    <div class="task-name">${escapeHtml(task.name)}</div>
+                    <div class="task-meta">
+                        <span class="badge">⏰ ${task.time}</span>
+                        <span class="badge">🏷️ ${task.category || '📌 默认'}</span>
+                        <span class="badge">${task.priority === 'high' ? '🔴 高' : task.priority === 'low' ? '🟢 低' : '🟠 中'}</span>
+                        ${task.repeat !== 'once' ? `<span class="badge">↻ ${repeatText(task.repeat)}</span>` : ''}
+                    </div>
+                    ${task.description ? `<div style="font-size:13px; color:#b9c3e6; margin-top:6px;">📝 ${escapeHtml(task.description)}</div>` : ''}
+                </div>
+                <div class="task-actions">
+                    <button class="btn-icon" style="width:36px;height:36px;" onclick="deleteTask(${task.id})" title="删除">🗑️</button>
+                    <button class="btn-icon" style="width:36px;height:36px;" onclick="editTaskPrompt(${task.id})" title="编辑">✏️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function repeatText(r) { const map = { daily:'每天', weekdays:'工作日', weekends:'周末', once:'仅一次' }; return map[r]||r; }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    // 打卡切换
+    window.toggleTask = function(id) {
+        const key = formatDateKey(id);
+        if (completedMap[key]) {
+            delete completedMap[key];
+            showToast('⏸️ 打卡已取消', 1500);
+        } else {
+            completedMap[key] = true;
+            showToast('🎉 打卡成功！继续向前', 1800);
+            createSparks();
+        }
+        saveAll();
+    };
+
+    // 删除任务
+    window.deleteTask = function(id) {
+        if (confirm('永久删除任务？')) {
+            tasks = tasks.filter(t => t.id !== id);
+            // 清理相关打卡记录
+            Object.keys(completedMap).forEach(k => { if(k.startsWith(id+'_')) delete completedMap[k]; });
+            saveAll();
+            showToast('任务已移除', 1000);
+        }
+    };
+
+    // 编辑任务简易弹窗
+    window.editTaskPrompt = function(id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+        const newName = prompt('编辑任务名称', task.name);
+        if (newName && newName.trim()) task.name = newName.trim();
+        const newTime = prompt('新提醒时间 (HH:MM)', task.time);
+        if (newTime && /^([01]\d|2[0-3]):([0-5]\d)$/.test(newTime)) task.time = newTime;
+        const newPriority = prompt('优先级 (high/normal/low)', task.priority);
+        if (['high','normal','low'].includes(newPriority)) task.priority = newPriority;
+        const newCat = prompt('分类标签 (如 💪 健康)', task.category || '🌱 成长');
+        if (newCat) task.category = newCat;
+        saveAll();
+    };
+
+    // 添加任务
+    document.getElementById('taskForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('taskName').value.trim();
+        if (!name) return;
+        const newTask = {
+            id: Date.now(),
+            name: name,
+            description: document.getElementById('taskDesc').value,
+            time: document.getElementById('taskTime').value,
+            repeat: document.getElementById('repeatType').value,
+            priority: document.getElementById('priority').value,
+            category: document.getElementById('taskCategory').value,
+            created: new Date().toISOString(),
+        };
+        tasks.push(newTask);
+        saveAll();
+        document.getElementById('taskForm').reset();
+        document.querySelector('.priority-option.selected')?.classList.remove('selected');
+        document.querySelector('.priority-option[data-val="normal"]').classList.add('selected');
+        document.getElementById('priority').value = 'normal';
+        showToast('✨ 新任务已加入星轨', 1500);
+    });
+
+    // 优先级选择
+    document.querySelectorAll('.priority-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            document.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            document.getElementById('priority').value = opt.dataset.val;
+        });
+    });
+
+    // 排序按钮
+    document.getElementById('sortByPriority').addEventListener('click', () => {
+        sortPriorityActive = !sortPriorityActive;
+        renderTasks();
+        showToast(sortPriorityActive ? '按优先级排序' : '恢复时间排序', 1000);
+    });
+
+    // 日历渲染 (包含完成标记)
+    function renderCalendar() {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const startWeekday = firstDay.getDay();
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        const prevDays = new Date(year, month, 0).getDate();
+        let html = '';
+        const weekdays = ['日','一','二','三','四','五','六'];
+        weekdays.forEach(d => html += `<div style="text-align:center; font-size:12px; color:#8e9bbe;">${d}</div>`);
+        for(let i=startWeekday-1; i>=0; i--) html += `<div class="calendar-day other-month" style="opacity:0.4;">${prevDays - i}</div>`;
+        for(let d=1; d<=daysInMonth; d++) {
+            const date = new Date(year, month, d);
+            const isToday = date.toDateString() === new Date().toDateString();
+            let hasCompleted = false;
+            for(let task of tasks) {
+                if(completedMap[`${task.id}_${date.toDateString()}`]) { hasCompleted = true; break; }
+            }
+            html += `<div class="calendar-day ${isToday ? 'today' : ''} ${hasCompleted ? 'completed' : ''}" style="aspect-ratio:1; background:${hasCompleted?'rgba(102,187,106,0.2)':'rgba(255,255,255,0.03)'}; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:14px;">${d}</div>`;
+        }
+        const totalCells = 42;
+        const filled = startWeekday + daysInMonth;
+        const remaining = totalCells - filled;
+        for(let i=1; i<=remaining; i++) html += `<div class="calendar-day other-month" style="opacity:0.4;">${i}</div>`;
+        calendarGrid.innerHTML = html;
+        monthYearSpan.innerText = `${year}年 ${month+1}月`;
+    }
+    document.getElementById('prevMonthBtn').onclick = () => { currentMonth.setMonth(currentMonth.getMonth()-1); renderCalendar(); };
+    document.getElementById('nextMonthBtn').onclick = () => { currentMonth.setMonth(currentMonth.getMonth()+1); renderCalendar(); };
+
+    // 统计图表 (每周完成趋势)
+    function updateChartAndAchievements() {
+        const canvas = document.getElementById('weeklyChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const width = canvas.clientWidth, height = canvas.clientHeight;
+        canvas.width = width; canvas.height = height;
+        ctx.clearRect(0,0,width,height);
+        // 最近7天完成数量
+        const days = [];
+        const completions = [];
+        for(let i=6; i>=0; i--) {
+            let d = new Date(); d.setDate(d.getDate() - i);
+            days.push(`${d.getMonth()+1}/${d.getDate()}`);
+            let cnt = 0;
+            tasks.forEach(t => { if(completedMap[`${t.id}_${d.toDateString()}`]) cnt++; });
+            completions.push(cnt);
+        }
+        const maxVal = Math.max(1, ...completions);
+        const barWidth = (width-50) / 7 - 4;
+        ctx.fillStyle = '#5c6bc0';
+        for(let i=0;i<7;i++) {
+            let barHeight = (completions[i]/maxVal) * (height-40);
+            ctx.fillRect(35 + i*(barWidth+6), height-20 - barHeight, barWidth, barHeight);
+            ctx.fillStyle = '#cbd5ff';
+            ctx.font = '10px Inter';
+            ctx.fillText(days[i], 32 + i*(barWidth+6), height-8);
+            ctx.fillStyle = '#5c6bc0';
+        }
+        // 成就计算
+        const totalCompletedAll = Object.keys(completedMap).length;
+        const streak = parseInt(streakSpan.innerText);
+        let achievements = [];
+        if(totalCompletedAll >= 10) achievements.push('🌟 初航之星 (10次打卡)');
+        if(streak >= 3) achievements.push('🔥 三日焰火');
+        if(streak >= 7) achievements.push('⚡ 周而复始');
+        if(tasks.length >= 8) achievements.push('📦 任务大师');
+        if(achievements.length===0) achievements.push('✨ 首次打卡解锁成就');
+        document.getElementById('achievementList').innerHTML = achievements.map(a => `<div class="achievement-badge">🏅 ${a}</div>`).join('');
+    }
+
+    // 粒子特效 (轻量)
+    function initParticles() {
+        const container = document.getElementById('particleField');
+        for(let i=0;i<60;i++) {
+            let p = document.createElement('div');
+            p.className = 'particle';
+            let size = 2 + Math.random() * 6;
+            p.style.width = size+'px'; p.style.height = size+'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDuration = 8 + Math.random() * 20 + 's';
+            p.style.animationDelay = Math.random() * 10 + 's';
+            p.style.opacity = 0.2 + Math.random() * 0.4;
+            container.appendChild(p);
+        }
+    }
+    function createSparks() {
+        for(let i=0;i<12;i++) {
+            let dot = document.createElement('div');
+            dot.style.position = 'fixed';
+            dot.style.width = '6px'; dot.style.height = '6px';
+            dot.style.background = `hsl(${Math.random()*360}, 80%, 65%)`;
+            dot.style.borderRadius = '50%';
+            dot.style.left = '50%'; dot.style.top = '50%';
+            dot.style.pointerEvents = 'none';
+            dot.style.zIndex = 9999;
+            document.body.appendChild(dot);
+            let dx = (Math.random() - 0.5) * 80;
+            let dy = (Math.random() - 0.5) * 80 - 40;
+            dot.animate([{transform:'translate(0,0) scale(1)', opacity:0.8},{transform:`translate(${dx}px, ${dy}px) scale(0)`, opacity:0}], {duration:400, easing:'ease-out'});
+            setTimeout(()=>dot.remove(),400);
+        }
+    }
+    function showToast(msg, duration=2000) {
+        const toast = document.getElementById('toastMsg');
+        toast.innerText = msg;
+        toast.style.transition = '0.2s';
+        toast.style.transform = 'translateY(0)';
+        toast.style.opacity = '1';
+        setTimeout(() => { toast.style.transform = 'translateY(100px)'; toast.style.opacity = '0'; }, duration);
+    }
+    // 导入导出
+    document.getElementById('exportBtn').addEventListener('click', () => {
+        const data = { tasks, completedMap, version: 'v2' };
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:'application/json'}));
+        a.download = `taskflow_backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        showToast('备份已导出',1200);
+    });
+    document.getElementById('importBtn').addEventListener('click', () => {
+        let inp = document.createElement('input');
+        inp.type = 'file'; inp.accept = '.json';
+        inp.onchange = e => {
+            let file = e.target.files[0];
+            if(!file) return;
+            let reader = new FileReader();
+            reader.onload = ev => {
+                try {
+                    let imported = JSON.parse(ev.target.result);
+                    if(imported.tasks) tasks = imported.tasks;
+                    if(imported.completedMap) completedMap = imported.completedMap;
+                    saveAll();
+                    showToast('导入成功，星轨已同步',1500);
+                } catch(err) { showToast('文件损坏',1000); }
+            };
+            reader.readAsText(file);
+        };
+        inp.click();
+    });
+    // 主题切换（轻量，不涉及音效）
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        document.body.style.background = document.body.style.background === 'radial-gradient(circle at 10% 30%, #0b1120, #030617)' ? 'radial-gradient(circle at 80% 20%, #1e1a2f, #0a0415)' : 'radial-gradient(circle at 10% 30%, #0b1120, #030617)';
+    });
+
+    // 初始化
+    initParticles();
+    renderTasks();
+    updateStats();
+    renderCalendar();
+    updateChartAndAchievements();
+    setInterval(() => { updateStats(); renderTasks(); updateChartAndAchievements(); }, 60000);
+</script>
+</body>
+</html>
+```
